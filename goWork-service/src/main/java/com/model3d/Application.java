@@ -16,8 +16,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
-        System.out.println("🚀 3D Model Generation Service Started Successfully!");
-        System.out.println("📖 API Documentation: http://localhost:8080/doc.html");
-        System.out.println("💊 Health Check: http://localhost:8080/actuator/health");
+        System.out.println("3D Model Generation 服务启动成功！");
+        System.out.println("Health Check: http://localhost:8080/actuator/health");
     }
 }
