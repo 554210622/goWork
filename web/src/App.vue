@@ -1,73 +1,48 @@
 <script setup>
-import ThreeScene from './components/ThreeScene.vue'
+import { ref } from 'vue'
+import AppHeader from './components/AppHeader.vue'
+import LeftNav from './components/LeftNav.vue'
+import CenterWorkspace from './components/CenterWorkspace.vue'
+import RightColumn from './components/RightColumn.vue'
+
+const centerWorkspaceRef = ref(null)
+
+const handleModelSelected = (asset) => {
+  if (centerWorkspaceRef.value) {
+    centerWorkspaceRef.value.loadModel(asset.modelPath)
+  }
+}
 </script>
 
 <template>
-  <div>
-    <ThreeScene modelPath="/models/gltf/house.glb" />
-  </div>
+  <el-container class="app-container">
+    <!-- 顶部导航 -->
+    <AppHeader />
+    
+    <!-- 主体内容 -->
+    <el-container class="main-container">
+      <!-- 左侧导航 -->
+      <LeftNav />
+      
+      <!-- 中间工作区 -->
+      <CenterWorkspace ref="centerWorkspaceRef" />
+      
+      <!-- 右侧控制区 -->
+      <RightColumn @model-selected="handleModelSelected" />
+    </el-container>
+  </el-container>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+.app-container {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+.main-container {
+  flex: 1;
+  overflow: hidden;
 }
 </style>
