@@ -69,3 +69,46 @@ html, body {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+/* 暗黑模式全局样式 */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background: var(--app-bg-color);
+  color: var(--el-text-color-primary);
+}
+
+/* 暗黑模式下的滚动条 */
+.dark ::-webkit-scrollbar-track {
+  background: #2c2c2c;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* 暗黑模式下的Element Plus组件覆盖 */
+.dark .el-menu--horizontal {
+  background-color: transparent !important;
+}
+
+.dark .el-menu--horizontal .el-menu-item {
+  color: var(--el-text-color-primary) !important;
+  border-bottom-color: transparent !important;
+}
+
+.dark .el-menu--horizontal .el-menu-item:hover {
+  background-color: var(--el-fill-color-light) !important;
+  color: var(--el-color-primary) !important;
+}
+
+.dark .el-menu--horizontal .el-menu-item.is-active {
+  color: var(--el-color-primary) !important;
+  border-bottom-color: var(--el-color-primary) !important;
+}

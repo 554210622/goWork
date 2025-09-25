@@ -126,9 +126,9 @@ const formatTime = (date) => {
 
 <style scoped>
 .left-nav {
-  background: #f5f7fa;
-  border-right: 1px solid #e4e7ed;
-  transition: width 0.3s ease;
+  background: var(--app-sidebar-bg);
+  border-right: 1px solid var(--app-border-color);
+  transition: width 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
   position: relative;
   overflow: hidden;
 }
@@ -149,9 +149,11 @@ const formatTime = (date) => {
   justify-content: center;
   cursor: pointer;
   border-radius: 4px;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(3, 3, 3, 0.1);
+  background: var(--el-bg-color);
+  box-shadow: var(--app-shadow);
   z-index: 10;
+  transition: all 0.3s ease;
+  color: var(--el-text-color-primary);
 }
 
 .collapsed-btn_right{
@@ -159,7 +161,7 @@ const formatTime = (date) => {
 }
 
 .collapse-btn:hover {
-  background: #f0f0f0;
+  background: var(--el-fill-color-light);
 }
 
 .nav-section {

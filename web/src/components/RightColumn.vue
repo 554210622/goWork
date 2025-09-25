@@ -334,15 +334,16 @@ const formatTime = (date) => {
 
 <style scoped>
 .right-column {
-  background: #fff;
-  border-left: 1px solid #e4e7ed;
+  background: var(--app-panel-bg);
+  border-left: 1px solid var(--app-border-color);
   display: flex;
   flex-direction: column;
+  transition: all 0.3s ease;
 }
 
 .gen-panel {
   flex: 0 0 auto;
-  border-bottom: 1px solid #e4e7ed;
+  border-bottom: 1px solid var(--app-border-color);
   padding: 16px;
 }
 

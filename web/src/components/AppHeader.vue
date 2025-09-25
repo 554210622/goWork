@@ -23,10 +23,9 @@
     <div class="header-right">
       <!-- 暗黑模式切换 -->
       <el-switch
-        v-model="isDark"
+        v-model="themeStore.isDark"
         :active-icon="Moon"
         :inactive-icon="Sunny"
-        @change="toggleDarkMode"
       />
       
       <!-- 通知 -->
@@ -61,9 +60,10 @@ import {
   Moon, 
   Sunny 
 } from '@element-plus/icons-vue'
+import { useThemeStore } from '../stores/theme'
 
+const themeStore = useThemeStore()
 const activeMenu = ref('workspace')
-const isDark = ref(false)
 const notificationCount = ref(3)
 const userAvatar = ref('https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png')
 
@@ -73,10 +73,7 @@ const handleMenuSelect = (index) => {
   console.log('切换到:', index)
 }
 
-const toggleDarkMode = (value) => {
-  // 这里可以添加暗黑模式切换逻辑
-  console.log('暗黑模式:', value)
-}
+// 移除不需要的toggleDarkMode函数，因为el-switch会自动处理v-model绑定
 
 const openSettings = () => {
   console.log('打开设置')
@@ -93,9 +90,10 @@ const handleUserCommand = (command) => {
   justify-content: space-between;
   align-items: center;
   padding: 0 20px;
-  background: #fff;
-  border-bottom: 1px solid #e4e7ed;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: var(--app-header-bg);
+  border-bottom: 1px solid var(--app-border-color);
+  box-shadow: var(--app-shadow);
+  transition: all 0.3s ease;
 }
 
 .header-left {
@@ -110,15 +108,17 @@ const handleUserCommand = (command) => {
   gap: 8px;
   font-size: 18px;
   font-weight: bold;
-  color: #409eff;
+  color: var(--el-color-primary);
 }
 
 .logo-text {
-  color: #303133;
+  color: var(--el-text-color-primary);
+  transition: color 0.3s ease;
 }
 
 .nav-menu {
   border-bottom: none;
+  background: transparent;
 }
 
 .header-right {
@@ -129,5 +129,11 @@ const handleUserCommand = (command) => {
 
 .notification-badge {
   margin-right: 8px;
+}
+
+/* 暗黑模式下的特殊样式 */
+:global(.dark) .app-header {
+  background: var(--app-header-bg);
+  border-bottom-color: var(--app-border-color);
 }
 </style>

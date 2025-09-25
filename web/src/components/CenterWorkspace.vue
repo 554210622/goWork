@@ -182,7 +182,8 @@ defineExpose({
   flex-direction: column;
   height: 100%;
   padding: 0;
-  background: #f0f2f5;
+  background: var(--app-workspace-bg);
+  transition: background-color 0.3s ease;
 }
 
 .top-toolbar,
@@ -191,14 +192,15 @@ defineExpose({
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: #fff;
-  border-bottom: 1px solid #e4e7ed;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: var(--app-panel-bg);
+  border-bottom: 1px solid var(--app-border-color);
+  box-shadow: var(--app-shadow);
+  transition: all 0.3s ease;
 }
 
 .bottom-toolbar {
   border-bottom: none;
-  border-top: 1px solid #e4e7ed;
+  border-top: 1px solid var(--app-border-color);
 }
 
 .toolbar-left,
@@ -221,6 +223,13 @@ defineExpose({
   border-radius: 8px;
   margin: 8px;
   overflow: hidden;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.3s ease;
+}
+
+/* 暗黑模式下的3D视图背景 */
+:global(.dark) .model-display {
+  background: #1a1a1a;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 </style>

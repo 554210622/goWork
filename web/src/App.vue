@@ -39,6 +39,8 @@ const handleModelSelected = (asset) => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  background: var(--app-bg-color);
+  transition: background-color 0.3s ease;
 }
 
 .main-container {
