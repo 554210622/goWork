@@ -49,6 +49,12 @@ public class ModelTask {
      */
     @TableField("input_data")
     private String inputData;
+    
+    /**
+     * 任务类型：用于API查询 (text/image)
+     */
+    @TableField("task_type")
+    private String taskType;
 
     /**
      * 任务状态：pending-等待中, processing-处理中, completed-已完成, failed-失败
