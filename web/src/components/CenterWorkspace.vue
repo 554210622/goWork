@@ -96,6 +96,7 @@ import {
   Download, 
   Printer 
 } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import ThreeScene from './ThreeScene.vue'
 
 const threeSceneRef = ref(null)
@@ -105,6 +106,7 @@ const showStats = ref(false)
 const modelVisible = ref(true)
 const currentModelPath = ref('/models/gltf/house.glb')
 const currentModel = ref(null)
+const currentModelDownloadUrl = ref('') // 存储当前模型的下载URL
 
 const zoomIn = () => {
   if (threeSceneRef.value) {
@@ -153,8 +155,33 @@ const toggleVisibility = () => {
   }
 }
 
-const exportModel = () => {
-  console.log('导出模型')
+const exportModel = async () => {
+  if (!currentModelDownloadUrl.value) {
+    ElMessage.warning('没有可导出的模型')
+    return
+  }
+
+  try {
+    const response = await fetch(currentModelDownloadUrl.value)
+    const blob = await response.blob()
+    
+    // 创建下载链接
+    const downloadUrl = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = `${currentModel.value?.name || 'model'}.glb`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    // 清理URL对象
+    window.URL.revokeObjectURL(downloadUrl)
+    
+    ElMessage.success('模型导出成功！')
+  } catch (error) {
+    console.error('模型导出失败:', error)
+    ElMessage.error('模型导出失败: ' + error.message)
+  }
 }
 
 const printModel = () => {
@@ -166,13 +193,27 @@ const onModelLoaded = (modelInfo) => {
   console.log('模型加载完成:', modelInfo)
 }
 
+// 处理模型生成完成事件
+const handleModelGenerated = (modelData) => {
+  currentModelDownloadUrl.value = modelData.downloadUrl
+  currentModel.value = {
+    name: modelData.modelName,
+    ...modelData.modelInfo
+  }
+  // 如果需要在3D场景中显示生成的模型，可以加载模型路径
+  if (modelData.downloadUrl) {
+    currentModelPath.value = modelData.downloadUrl
+  }
+}
+
 // 暴露方法给父组件
 const loadModel = (modelPath) => {
   currentModelPath.value = modelPath
 }
 
 defineExpose({
-  loadModel
+  loadModel,
+  handleModelGenerated
 })
 </script>
 
