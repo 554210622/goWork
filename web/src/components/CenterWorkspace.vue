@@ -97,6 +97,7 @@ import {
   Printer 
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { getModelByIdApi } from '@/api/modelGeneration'
 import ThreeScene from './ThreeScene.vue'
 
 const threeSceneRef = ref(null)
@@ -104,9 +105,10 @@ const lightIntensity = ref(1.0)
 const showGrid = ref(false)
 const showStats = ref(false)
 const modelVisible = ref(true)
-const currentModelPath = ref('/models/gltf/house.glb')
+const currentModelPath = ref('')
 const currentModel = ref(null)
-const currentModelDownloadUrl = ref('') // 存储当前模型的下载URL
+const currentModelId = ref(21) // 存储当前模型的ID
+const currentModelData = ref(null) // 存储当前模型的详细数据
 
 const zoomIn = () => {
   if (threeSceneRef.value) {
@@ -156,13 +158,22 @@ const toggleVisibility = () => {
 }
 
 const exportModel = async () => {
-  if (!currentModelDownloadUrl.value) {
+  if (!currentModelId.value) {
     ElMessage.warning('没有可导出的模型')
     return
   }
 
   try {
-    const response = await fetch(currentModelDownloadUrl.value)
+    // 根据模型ID查询模型详情
+    const modelData = await getModelById(currentModelId.value)
+    
+    if (!modelData.downloadUrl) {
+      ElMessage.error('模型下载链接不存在')
+      return
+    }
+
+    // 下载模型文件
+    const response = await fetch(modelData.downloadUrl)
     const blob = await response.blob()
     
     // 创建下载链接
@@ -194,15 +205,26 @@ const onModelLoaded = (modelInfo) => {
 }
 
 // 处理模型生成完成事件
-const handleModelGenerated = (modelData) => {
-  currentModelDownloadUrl.value = modelData.downloadUrl
+const handleModelGenerated = async (modelData) => {
+  currentModelId.value = modelData.modelId
   currentModel.value = {
     name: modelData.modelName,
     ...modelData.modelInfo
   }
-  // 如果需要在3D场景中显示生成的模型，可以加载模型路径
-  if (modelData.downloadUrl) {
-    currentModelPath.value = modelData.downloadUrl
+  
+  try {
+    // 根据模型ID查询模型详情，获取3D模型路径用于预览
+    const modelDetails = await getModelByIdApi(modelData.modelId)
+    console.log("模型生成数据",modelDetails)
+    currentModelData.value = modelDetails
+    
+    // 如果有3D模型路径，加载到场景中
+    // if (modelDetails.modelUrl || modelDetails.previewUrl) {
+    //   currentModelPath.value = modelDetails.modelUrl || modelDetails.previewUrl
+    // }
+  } catch (error) {
+    console.error('获取模型详情失败:', error)
+    ElMessage.error('获取模型详情失败')
   }
 }
 
@@ -214,6 +236,16 @@ const loadModel = (modelPath) => {
 defineExpose({
   loadModel,
   handleModelGenerated
+})
+
+const getModelById = async(id) => {
+  const res = await getModelByIdApi(id)
+  currentModelPath.value = res.pbrModelUrl
+  return res
+}
+
+onMounted(() => {
+  getModelById(currentModelId.value)
 })
 </script>
 

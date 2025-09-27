@@ -18,7 +18,7 @@ export function uploadImage(file) {
 // 文字生成3D模型
 export function generateModelFromText(data) {
   return request({
-    url: "/model/generate/text",
+    url: "/model3d/text-to-3d",
     method: "post",
     data,
   })
@@ -34,9 +34,17 @@ export function generateModelFromImage(data) {
 }
 
 // 获取模型历史记录
-export function getModelHistory() {
+export function getModelHistoryApi() {
   return request({
-    url: "/model/history",
+    url: "/model3d/tasks?userId=1",
+    method: "get",
+  })
+}
+
+// 根据ID查询模型详情
+export function getModelByIdApi(id) {
+  return request({
+    url: `/model3d/task/${id}`,
     method: "get",
   })
 }
