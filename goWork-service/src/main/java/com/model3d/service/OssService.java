@@ -84,13 +84,26 @@ public class OssService {
      */
     public String uploadFromUrl(String sourceUrl, String fileName, String fileType) {
         try {
-            log.info("开始从URL下载并上传到OSS: sourceUrl={}, fileType={}", sourceUrl, fileType);
+            return uploadFromUrlWithRetry(sourceUrl, fileName, fileType, 3);
+        } catch (Exception e) {
+            log.error("从URL上传文件到OSS失败: sourceUrl={}", sourceUrl, e);
+            throw new RuntimeException("文件上传失败: " + e.getMessage());
+        }
+    }
+    
+    private String uploadFromUrlWithRetry(String sourceUrl, String fileName, String fileType, int maxRetries) {
+        Exception lastException = null;
+        
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                log.info("开始从URL下载并上传到OSS: sourceUrl={}, fileType={}, attempt={}/{}", 
+                    sourceUrl, fileType, attempt, maxRetries);
 
-            // 1. 从URL下载文件
-            URL url = new URL(sourceUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(60000);
+                // 1. 从URL下载文件
+                URL url = new URL(sourceUrl);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setConnectTimeout(60000);  // 连接超时60秒
+                connection.setReadTimeout(300000);    // 读取超时5分钟
             connection.setRequestMethod("GET");
             
             // 设置User-Agent避免被拒绝
@@ -136,15 +149,31 @@ public class OssService {
                 // 6. 生成访问URL
                 String ossUrl = generateAccessUrl(ossFilePath);
                 
-                log.info("文件上传成功: sourceUrl={} -> ossUrl={}", sourceUrl, ossUrl);
+                log.info("文件上传成功: sourceUrl={} -> ossUrl={}, attempt={}", sourceUrl, ossUrl, attempt);
                 
                 return ossUrl;
             }
 
-        } catch (Exception e) {
-            log.error("从URL上传文件到OSS失败: sourceUrl={}", sourceUrl, e);
-            throw new RuntimeException("文件上传失败: " + e.getMessage());
+            } catch (Exception e) {
+                lastException = e;
+                log.warn("第{}次尝试上传失败: sourceUrl={}, error={}", attempt, sourceUrl, e.getMessage());
+                
+                if (attempt < maxRetries) {
+                    try {
+                        // 指数退避：第1次重试等待2秒，第2次等待4秒
+                        long waitTime = 2000L * attempt;
+                        log.info("等待{}ms后进行第{}次重试", waitTime, attempt + 1);
+                        Thread.sleep(waitTime);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException("重试被中断", ie);
+                    }
+                }
+            }
         }
+        
+        log.error("从URL上传文件到OSS失败，已重试{}次: sourceUrl={}", maxRetries, sourceUrl, lastException);
+        throw new RuntimeException("文件上传失败: " + lastException.getMessage());
     }
 
 
@@ -173,19 +202,42 @@ public class OssService {
      * 生成OSS文件路径（用于URL下载）
      */
     private String generateOssFilePath(String fileName, String sourceUrl, String fileType) {
-        // 如果没有提供文件名，从URL中提取或生成
-        if (fileName == null || fileName.trim().isEmpty()) {
-            fileName = extractFileNameFromUrl(sourceUrl);
-            if (fileName == null) {
-                // 生成唯一文件名
-                String extension = getFileExtensionFromUrl(sourceUrl);
-                fileName = UUID.randomUUID().toString() + (extension.isEmpty() ? "" : "." + extension);
+        // 始终生成唯一文件名，避免文件覆盖问题
+        String extension = getFileExtensionFromUrl(sourceUrl);
+        if (extension.isEmpty()) {
+            // 如果无法从URL获取扩展名，尝试从提供的文件名获取
+            if (fileName != null && !fileName.trim().isEmpty()) {
+                extension = getFileExtension(fileName);
+            }
+            // 如果还是没有扩展名，根据文件类型设置默认扩展名
+            if (extension.isEmpty()) {
+                switch (fileType) {
+                    case "preview":
+                        extension = "webp";
+                        break;
+                    case "model":
+                    case "pbr_model":
+                    case "base_model":
+                        extension = "glb";
+                        break;
+                    case "texture":
+                    case "normal_map":
+                    case "metallic_map":
+                    case "roughness_map":
+                        extension = "jpg";
+                        break;
+                    default:
+                        extension = "bin";
+                }
             }
         }
         
+        // 生成唯一文件名，包含时间戳和随机UUID
+        String uniqueFileName = System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8) + "." + extension;
+        
         // 按日期和类型组织文件路径
         String datePath = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-        return ossConfig.getPathPrefix() + fileType + "/" + datePath + "/" + fileName;
+        return ossConfig.getPathPrefix() + fileType + "/" + datePath + "/" + uniqueFileName;
     }
 
     /**
