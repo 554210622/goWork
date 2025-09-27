@@ -16,6 +16,12 @@ service.interceptors.request.use(
     if (token) {
       req.headers.Authorization = `Bearer ${token}`
     }
+
+    // 如果 req.url 是完整链接（http/https 开头），则不使用 baseURL
+    if (/^https?:\/\//.test(req.url)) {
+      req.baseURL = '' // 不拼接 baseURL
+    }
+
     return req
   },
   (error) => {

@@ -109,31 +109,72 @@
 
       <!-- 资产列表 -->
       <div class="asset-list">
-        <div v-for="asset in filteredAssets" :key="asset.id" class="asset-card" :class="{ highlighted: asset.isNew }"
+        <div v-for="asset in assets" :key="asset.id" class="asset-card" :class="{ highlighted: asset.isNew }"
           @click="selectAsset(asset)">
           <div class="asset-thumbnail">
-            <img :src="asset.thumbnail" :alt="asset.name" />
+            <el-image 
+              :src="asset.thumbnail" 
+              :alt="asset.name"
+              fit="cover"
+              :preview-src-list="[asset.thumbnail]"
+              :initial-index="0"
+              preview-teleported
+            />
             <div class="asset-overlay">
               <el-button :icon="View" circle size="small" @click.stop="previewAsset(asset)" />
               <el-button :icon="Download" circle size="small" @click.stop="importAsset(asset)" />
             </div>
           </div>
-          <div class="asset-info">
-            <div class="asset-name">{{ asset.name }}</div>
-            <div class="asset-tags">
-              <el-tag v-for="tag in asset.tags" :key="tag" size="small" type="info">
-                {{ tag }}
-              </el-tag>
-            </div>
-          </div>
+          
         </div>
       </div>
     </div>
+
+    <!-- 图片预览对话框 -->
+    <el-dialog 
+      v-model="previewDialogVisible" 
+      title="资产预览" 
+      width="600px"
+      :before-close="handlePreviewClose"
+    >
+      <div v-if="currentPreviewAsset" class="preview-content">
+        <div class="preview-image">
+          <el-image 
+            :src="currentPreviewAsset.thumbnail" 
+            :alt="currentPreviewAsset.name"
+            fit="contain"
+            style="width: 100%; max-height: 400px;"
+            :preview-src-list="[currentPreviewAsset.thumbnail]"
+            :initial-index="0"
+            preview-teleported
+          />
+        </div>
+        <div class="preview-info">
+          <h4>{{ currentPreviewAsset.name || '未命名资产' }}</h4>
+          <div class="preview-tags" v-if="currentPreviewAsset.tags && currentPreviewAsset.tags.length">
+            <el-tag 
+              v-for="tag in currentPreviewAsset.tags" 
+              :key="tag" 
+              size="small" 
+              type="info"
+            >
+              {{ tag }}
+            </el-tag>
+          </div>
+          <div class="preview-actions">
+            <el-button type="primary" @click="importAsset(currentPreviewAsset)">
+              <el-icon><Download /></el-icon>
+              导入到场景
+            </el-button>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
   </el-aside>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
   Plus,
   Close,
@@ -149,7 +190,7 @@ import {
   Picture
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { uploadImage, generateModelFromText, generateModelFromImage } from '@/api/modelGeneration'
+import { uploadImage, generateModelFromText, generateModelFromImage, getModelHistoryApi } from '@/api/modelGeneration'
 
 const promptText = ref('')
 const generating = ref(false)
@@ -159,35 +200,33 @@ const assetSearchQuery = ref('')
 const isImageMode = ref(false) // 默认为文字模式
 
 // 聊天记录
-const chatHistory = ref([
-  {
-    id: 1,
-    type: 'user',
-    content: '生成一个现代风格的沙发',
-    timestamp: new Date('2024-01-15 14:30')
-  },
-  {
-    id: 2,
-    type: 'assistant',
-    content: '已为您生成现代风格沙发模型，请查看3D视图',
-    timestamp: new Date('2024-01-15 14:31')
-  }
-])
+// const chatHistory = ref([
+//   {
+//     id: 1,
+//     type: 'user',
+//     content: '生成一个现代风格的沙发',
+//     timestamp: new Date('2024-01-15 14:30')
+//   },
+//   {
+//     id: 2,
+//     type: 'assistant',
+//     content: '已为您生成现代风格沙发模型，请查看3D视图',
+//     timestamp: new Date('2024-01-15 14:31')
+//   }
+// ])
 
 // 资产数据
 const assets = ref([
   {
     id: 1,
-    name: '现代沙发',
-    thumbnail: 'https://via.placeholder.com/120x120/409EFF/fff?text=沙发',
-    tags: ['家具', '现代'],
+    
+    thumbnail: 'https://seven-mulik.oss-cn-guangzhou.aliyuncs.com/model3d/preview/2025/09/27/legacy_mesh.webp',
     isNew: true,
-    modelPath: '/models/sofa.glb'
   },
   {
     id: 2,
     name: '科幻机器人',
-    thumbnail: 'https://via.placeholder.com/120x120/67C23A/fff?text=机器人',
+    thumbnail: 'https://seven-mulik.oss-cn-guangzhou.aliyuncs.com/model3d/preview/2025/09/27/legacy_mesh.webp',
     tags: ['科幻', '角色'],
     isNew: false,
     modelPath: '/models/robot.glb'
@@ -195,20 +234,20 @@ const assets = ref([
   {
     id: 3,
     name: '建筑模型',
-    thumbnail: 'https://via.placeholder.com/120x120/E6A23C/fff?text=建筑',
+    thumbnail: 'https://seven-mulik.oss-cn-guangzhou.aliyuncs.com/model3d/preview/2025/09/27/legacy_mesh.webp',
     tags: ['建筑', '场景'],
     isNew: false,
     modelPath: '/models/building.glb'
   }
 ])
 
-const filteredAssets = computed(() => {
-  if (!assetSearchQuery.value) return assets.value
-  return assets.value.filter(asset =>
-    asset.name.toLowerCase().includes(assetSearchQuery.value.toLowerCase()) ||
-    asset.tags.some(tag => tag.toLowerCase().includes(assetSearchQuery.value.toLowerCase()))
-  )
-})
+// const filteredAssets = computed(() => {
+//   if (!assetSearchQuery.value) return assets.value
+//   return assets.value.filter(asset =>
+//     asset.name.toLowerCase().includes(assetSearchQuery.value.toLowerCase()) ||
+//     asset.tags.some(tag => tag.toLowerCase().includes(assetSearchQuery.value.toLowerCase()))
+//   )
+// })
 
 // 计算是否应该禁用上传
 const isUploadDisabled = computed(() => {
@@ -252,10 +291,9 @@ const beforeUpload = async (file) => {
     })
 
   try {
-    
-
     // 上传图片到后端
-    const imageUrl = await uploadImage(file)
+    const response = await uploadImage(file)
+    const imageUrl = response.url // 从响应中获取图片URL
     uploadedImageUrl.value = imageUrl
 
     // 创建本地预览URL
@@ -274,7 +312,6 @@ const beforeUpload = async (file) => {
     ElMessage.error('图片上传失败,请联系管理员')
   } finally {
     loadingMessage.close()
-
   }
 
   return false // 阻止自动上传
@@ -306,32 +343,38 @@ const generateModel = async () => {
   })
 
   try {
-    let modelUrl = ''
+    let response = null
     const userId = 1 // 这里应该从用户状态或登录信息中获取
 
     if (isImageMode.value) {
       // 图片模式生成
       const params = {
         userId: userId,
+        inputType: 'img',
         img_url: uploadedImageUrl.value,
         ...(selectedStyle.value && { style: selectedStyle.value })
       }
-      modelUrl = await generateModelFromImage(params)
+      response = await generateModelFromImage(params)
     } else {
       // 文字模式生成
       const params = {
         userId: userId,
+        inputType: 'text',
         prompt: promptText.value.trim(),
         ...(selectedStyle.value && { style: selectedStyle.value })
       }
-      modelUrl = await generateModelFromText(params)
+      response = await generateModelFromText(params)
+      console.log('id',response)
     }
+
+    // 从响应中获取模型ID
+    const modelId = response.id || response.data?.id || response
 
     // 存储生成的模型信息
     const modelInfo = {
-      id: Date.now(),
+      id: modelId,
       name: `${isImageMode.value ? '图片生成' : 'AI生成'}的模型 ${assets.value.length + 1}`,
-      downloadUrl: modelUrl,
+      modelId: modelId,
       style: selectedStyle.value,
       createdAt: new Date(),
       inputType: isImageMode.value ? 'image' : 'text',
@@ -347,23 +390,14 @@ const generateModel = async () => {
       timestamp: new Date()
     })
 
-    // 添加新生成的资产到资产库
-    const newAsset = {
-      id: modelInfo.id,
-      name: modelInfo.name,
-      thumbnail: 'https://via.placeholder.com/120x120/F56C6C/fff?text=新模型',
-      tags: [isImageMode.value ? '图片生成' : 'AI生成'],
-      isNew: true,
-      modelPath: modelUrl,
-      downloadUrl: modelUrl
-    }
-    assets.value.unshift(newAsset)
+    // 刷新资产库
+    await getModelHistory()
 
-    // 发送模型生成完成事件给父组件，传递下载URL
+    // 发送模型生成完成事件给父组件，传递模型ID
     emit('model-generated', {
-      downloadUrl: modelUrl,
-      modelName: modelInfo.name,
-      modelInfo: modelInfo
+      modelId: modelId,
+      // modelName: modelInfo.name,
+      // modelInfo: modelInfo
     })
 
     ElMessage.success('模型生成成功！')
@@ -396,12 +430,22 @@ const clearHistory = () => {
   chatHistory.value = []
 }
 
+// 图片预览相关
+const previewDialogVisible = ref(false)
+const currentPreviewAsset = ref(null)
+
 const selectAsset = (asset) => {
   emit('model-selected', asset)
 }
 
 const previewAsset = (asset) => {
-  console.log('预览资产:', asset)
+  currentPreviewAsset.value = asset
+  previewDialogVisible.value = true
+}
+
+const handlePreviewClose = () => {
+  previewDialogVisible.value = false
+  currentPreviewAsset.value = null
 }
 
 const importAsset = (asset) => {
@@ -468,6 +512,21 @@ const styleOptions = [
 // 存储上传的图片URL和生成的模型URL
 const uploadedImageUrl = ref('')
 const generatedModels = ref([]) // 存储生成的模型信息
+
+// 获取模型记录
+const getModelHistory = async () => {
+  const res = await getModelHistoryApi()
+  console.log("模型记录:", res)
+  assets.value = res.map((item) => ({
+    id: item.id,
+    thumbnail: item.previewUrl,
+    isNew: false
+  }))
+}
+
+onMounted(() => {
+  getModelHistory()
+})
 </script>
 
 <style>
@@ -649,11 +708,33 @@ const generatedModels = ref([]) // 存储生成的模型信息
 }
 
 .asset-list {
-  flex: 1;
   overflow-y: auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 12px;
+  padding: 8px 4px;
+  max-height: calc(100vh - 400px);
+  scroll-behavior: smooth;
+}
+
+.asset-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.asset-list::-webkit-scrollbar-track {
+  background: #f5f7fa;
+  border-radius: 4px;
+}
+
+.asset-list::-webkit-scrollbar-thumb {
+  background: #dcdfe6;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.asset-list::-webkit-scrollbar-thumb:hover {
+  background: #c0c4cc;
 }
 
 .asset-card {
@@ -662,7 +743,12 @@ const generatedModels = ref([]) // 存储生成的模型信息
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: #fff;
+  /* background: #fff; */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 12px;
+  min-height: 80px;
 }
 
 .asset-card:hover {
@@ -677,9 +763,10 @@ const generatedModels = ref([]) // 存储生成的模型信息
 
 .asset-thumbnail {
   position: relative;
-  width: 100%;
-  height: 100px;
-  overflow: hidden;
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  flex-shrink: 0;
 }
 
 .asset-thumbnail img {
@@ -708,16 +795,21 @@ const generatedModels = ref([]) // 存储生成的模型信息
 }
 
 .asset-info {
-  padding: 8px;
+  flex: 1;
+  margin-left: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .asset-name {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #303133;
 }
 
 .asset-tags {
@@ -729,5 +821,52 @@ const generatedModels = ref([]) // 存储生成的模型信息
 .no-resize textarea {
   resize: none !important;
   /* 禁止拉伸 */
+}
+
+/* 预览对话框样式 */
+.preview-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.preview-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 200px;
+}
+
+.preview-info {
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.preview-info h4 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.preview-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.preview-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.preview-actions .el-button {
+  padding: 12px 24px;
+  font-size: 14px;
 }
 </style>
