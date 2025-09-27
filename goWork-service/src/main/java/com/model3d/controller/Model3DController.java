@@ -3,7 +3,7 @@ package com.model3d.controller;
 import com.model3d.common.Result;
 import com.model3d.dto.GenerateRequest;
 import com.model3d.dto.TaskResponse;
-import com.model3d.service.MeshyService;
+import com.model3d.service.TripoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,8 +24,7 @@ import java.util.List;
 public class Model3DController {
 
     @Autowired
-    private MeshyService meshyService;
-
+    private TripoService tripoService;
     /**
      * 文本生成3D模型
      */
@@ -38,7 +37,7 @@ public class Model3DController {
         request.setInputType("text");
         request.setInputData(request.getPrompt());
         
-        TaskResponse response = meshyService.textTo3D(request);
+        TaskResponse response = tripoService.textTo3D(request);
         return Result.success(response);
     }
 
@@ -57,20 +56,20 @@ public class Model3DController {
             return Result.error("图片URL不能为空");
         }
         
-        TaskResponse response = meshyService.imageTo3D(request);
+        TaskResponse response = tripoService.imageTo3D(request);
         return Result.success(response);
     }
 
     /**
-     * 查询任务状态
+     * 查询任务状态 - 使用本地任务ID
      */
-    @GetMapping("/task/{taskId}")
-    @Operation(summary = "查询任务状态", description = "根据任务ID查询3D模型生成状态")
+    @GetMapping("/task/{localTaskId}")
+    @Operation(summary = "查询任务状态", description = "根据本地任务ID查询3D模型生成状态")
     public Result<TaskResponse> getTaskStatus(
-            @Parameter(description = "任务ID") @PathVariable Long taskId) {
-        log.info("查询任务状态: taskId={}", taskId);
+            @Parameter(description = "本地任务ID") @PathVariable Long localTaskId) {
+        log.info("查询任务状态: localTaskId={}", localTaskId);
 
-        TaskResponse response = meshyService.getTaskStatus(taskId);
+        TaskResponse response = tripoService.getTaskStatus(localTaskId);
         return Result.success(response);
     }
 
@@ -83,20 +82,33 @@ public class Model3DController {
             @Parameter(description = "用户ID") @RequestParam Long userId) {
         log.info("获取用户任务列表: userId={}", userId);
 
-        List<TaskResponse> responses = meshyService.getUserTasks(userId);
+        List<TaskResponse> responses = tripoService.getUserTasks(userId);
         return Result.success(responses);
     }
 
     /**
-     * 轮询任务状态（用于前端定时查询）
+     * 轮询任务状态（用于前端定时查询）- 使用本地任务ID
      */
-    @GetMapping("/task/{taskId}/poll")
+    @GetMapping("/task/{localTaskId}/poll")
     @Operation(summary = "轮询任务状态", description = "轮询查询任务状态，用于前端定时更新")
     public Result<TaskResponse> pollTaskStatus(
-            @Parameter(description = "任务ID") @PathVariable Long taskId) {
-        log.debug("轮询任务状态: taskId={}", taskId);
+            @Parameter(description = "本地任务ID") @PathVariable Long localTaskId) {
+        log.debug("轮询任务状态: localTaskId={}", localTaskId);
 
-        TaskResponse response = meshyService.getTaskStatus(taskId);
+        TaskResponse response = tripoService.getTaskStatus(localTaskId);
+        return Result.success(response);
+    }
+
+    /**
+     * 根据Tripo任务ID查询状态（备用接口）
+     */
+    @GetMapping("/tripo-task/{tripoTaskId}")
+    @Operation(summary = "根据Tripo任务ID查询状态", description = "使用Tripo的原始任务ID查询状态")
+    public Result<TaskResponse> getTaskStatusByTripoId(
+            @Parameter(description = "Tripo任务ID") @PathVariable String tripoTaskId) {
+        log.info("根据Tripo任务ID查询状态: tripoTaskId={}", tripoTaskId);
+
+        TaskResponse response = tripoService.getTaskStatusByTripoId(tripoTaskId);
         return Result.success(response);
     }
 }

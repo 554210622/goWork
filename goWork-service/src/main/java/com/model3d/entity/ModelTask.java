@@ -57,16 +57,64 @@ public class ModelTask {
     private String taskType;
 
     /**
-     * 任务状态：pending-等待中, processing-处理中, completed-已完成, failed-失败
+     * 生成阶段：preview-预览阶段, refine-精细化阶段
+     */
+    @TableField("generation_stage")
+    private String generationStage;
+
+    /**
+     * 预览任务的Meshy ID（用于精细化阶段）
+     */
+    @TableField("preview_task_id")
+    private String previewTaskId;
+
+    /**
+     * 任务状态：PENDING-等待中, IN_PROGRESS-处理中, SUCCEEDED-已完成, FAILED-失败
      */
     @TableField("status")
     private String status;
 
     /**
-     * 生成的3D模型URL
+     * 生成的3D模型URL（主模型）
      */
     @TableField("model_url")
     private String modelUrl;
+
+    /**
+     * 基础模型URL（无纹理）
+     */
+    @TableField("base_model_url")
+    private String baseModelUrl;
+
+    /**
+     * PBR材质模型URL
+     */
+    @TableField("pbr_model_url")
+    private String pbrModelUrl;
+
+    /**
+     * 纹理图像URL
+     */
+    @TableField("texture_image_url")
+    private String textureImageUrl;
+
+    /**
+     * 法线贴图URL
+     */
+    @TableField("normal_map_url")
+    private String normalMapUrl;
+
+    /**
+     * 金属度贴图URL
+     */
+    @TableField("metallic_map_url")
+    private String metallicMapUrl;
+
+    /**
+     * 粗糙度贴图URL
+     */
+    @TableField("roughness_map_url")
+    private String roughnessMapUrl;
 
     /**
      * 预览图URL
