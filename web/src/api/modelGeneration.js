@@ -27,7 +27,7 @@ export function generateModelFromText(data) {
 // 图片生成3D模型
 export function generateModelFromImage(data) {
   return request({
-    url: "/model/generate/image",
+    url: "/model3d/image-to-3d",
     method: "post",
     data,
   })

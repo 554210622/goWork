@@ -22,6 +22,7 @@ const props = defineProps({
   lightIntensity: { type: Number, default: 1.0 },
   showGrid: { type: Boolean, default: false },
   showStats: { type: Boolean, default: false },
+  darkMode: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['model-loaded'])
@@ -51,7 +52,7 @@ const initThreeJS = () => {
 
   // Scene
   scene = new THREE.Scene()
-  scene.background = new THREE.Color(0x2c3e50)
+  scene.background = new THREE.Color(props.darkMode ? 0x000000 : 0x2c3e50)
 
   // PMREM + 环境贴图
   pmremGenerator = new THREE.PMREMGenerator(renderer)
@@ -83,6 +84,7 @@ const initThreeJS = () => {
   // 网格辅助线
   gridHelper = new THREE.GridHelper(10, 10)
   gridHelper.visible = props.showGrid
+  gridHelper.position.y = -1   // 往下移动 1 个单位
   scene.add(gridHelper)
 
   // 开始渲染循环
@@ -116,9 +118,15 @@ const loadModel = (modelPath) => {
       const maxAxis = Math.max(size.x, size.y, size.z)
       currentModel.scale.multiplyScalar(2 / maxAxis)
 
+      // 重新计算缩放后的包围盒和中心
       box.setFromObject(currentModel)
       const center = box.getCenter(new THREE.Vector3())
       currentModel.position.sub(center)
+
+      // ✅ 自动调整网格位置到模型底部
+      if (gridHelper) {
+        gridHelper.position.y = box.min.y
+      }
 
       // 启用阴影
       currentModel.traverse((child) => {
@@ -150,6 +158,7 @@ const loadModel = (modelPath) => {
   )
 }
 
+
 onBeforeUnmount(() => {
   window.removeEventListener('resize', onWindowResize)
   if (renderer) {
@@ -168,8 +177,10 @@ watch(() => props.modelPath, (newPath) => {
 })
 
 watch(() => props.lightIntensity, (newIntensity) => {
+  console.log('ThreeScene: 光照强度变化', newIntensity)
   if (directionalLight) {
     directionalLight.intensity = newIntensity
+    console.log('ThreeScene: 已更新光照强度为', directionalLight.intensity)
   }
 })
 
@@ -186,6 +197,12 @@ watch(() => props.showStats, (show) => {
     } else if (!show && container.value.contains(stats.dom)) {
       container.value.removeChild(stats.dom)
     }
+  }
+})
+
+watch(() => props.darkMode, (isDark) => {
+  if (scene) {
+    scene.background = new THREE.Color(isDark ? 0x000000 : 0x2c3e50)
   }
 })
 

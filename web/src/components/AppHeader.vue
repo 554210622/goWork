@@ -4,18 +4,14 @@
     <div class="header-left">
       <div class="logo">
         <el-icon size="24"><Box /></el-icon>
-        <span class="logo-text">ModelStudio</span>
+        <span class="logo-text">3DModel</span>
       </div>
       <el-menu
-        mode="horizontal"
         :default-active="activeMenu"
         class="nav-menu"
         @select="handleMenuSelect"
       >
         <el-menu-item index="workspace">工作区</el-menu-item>
-        <el-menu-item index="community">社区</el-menu-item>
-        <el-menu-item index="assets">我的资产</el-menu-item>
-        <el-menu-item index="join">加入我们</el-menu-item>
       </el-menu>
     </div>
 
