@@ -14,7 +14,7 @@
     <div class="nav-section">
       <el-button v-if="!collapsed" type="primary" :icon="Plus" class="new-chat-btn" @click="createNewChat"
         :class="{ collapsed: collapsed }">
-        <span  >新建模型聊天</span>
+        <span  >新建模型生成</span>
       </el-button>
       <el-button v-else  type="primary" :icon="Plus" @click="createNewChat"
         :class="{ collapsed: collapsed }">
@@ -26,12 +26,12 @@
 
     <!-- 搜索 -->
     <div class="nav-section" v-if="!collapsed">
-      <el-input v-model="searchQuery" placeholder="搜索模型聊天..." :prefix-icon="Search" clearable @input="handleSearch" />
+      <el-input v-model="searchQuery" placeholder="搜索生成模型记录..." :prefix-icon="Search" clearable @input="handleSearch" />
     </div>
 
     <!-- 模型聊天列表 -->
     <div class="chat-list" >
-      <div class="section-title" v-if="!collapsed">聊天记录</div>
+      <div class="section-title" v-if="!collapsed">模型记录</div>
       <div class="chat-items">
         <div v-for="chat in filteredChats" :key="chat.id" class="chat-item"
           :class="{ active: chat.id === activeChatId, collapsed: collapsed }" @click="selectChat(chat.id)">
@@ -77,11 +77,7 @@ const activeChatId = ref(1)
 
 // 模拟聊天数据
 const chats = ref([
-  { id: 1, title: '现代沙发设计', updatedAt: new Date('2024-01-15 14:30') },
-  { id: 2, title: '科幻机器人模型', updatedAt: new Date('2024-01-14 16:20') },
-  { id: 3, title: '建筑外观设计', updatedAt: new Date('2024-01-13 10:15') },
-  { id: 4, title: '游戏角色建模', updatedAt: new Date('2024-01-12 09:45') },
-  { id: 5, title: '家具组合设计', updatedAt: new Date('2024-01-11 15:30') },
+  { id: 1, title: '3D动物', updatedAt: new Date('2024-01-15 14:30') },
 ])
 
 const filteredChats = computed(() => {
@@ -162,6 +158,7 @@ const formatTime = (date) => {
 
 .collapse-btn:hover {
   background: var(--el-fill-color-light);
+  color: #409eff;
 }
 
 .nav-section {

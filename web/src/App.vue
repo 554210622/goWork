@@ -5,12 +5,19 @@ import LeftNav from './components/LeftNav.vue'
 import CenterWorkspace from './components/CenterWorkspace.vue'
 import RightColumn from './components/RightColumn.vue'
 
-const centerWorkspaceRef = ref(null)
+// const centerWorkspaceRef = ref(null)
 
-const handleModelSelected = (asset) => {
-  if (centerWorkspaceRef.value) {
-    centerWorkspaceRef.value.loadModel(asset.modelPath)
-  }
+// const handleModelSelected = (asset) => {
+//   if (centerWorkspaceRef.value) {
+//     centerWorkspaceRef.value.loadModel(asset.modelPath)
+//   }
+// }
+
+const modelId = ref(null)
+
+const handleModelGenerated = (asset) => {
+  console.log('父组件收到:', asset.modelId)
+  modelId.value = asset.modelId
 }
 </script>
 
@@ -25,10 +32,10 @@ const handleModelSelected = (asset) => {
       <LeftNav />
       
       <!-- 中间工作区 -->
-      <CenterWorkspace ref="centerWorkspaceRef" />
+      <CenterWorkspace :model-id="modelId" ref="centerWorkspaceRef" />
       
       <!-- 右侧控制区 -->
-      <RightColumn @model-selected="handleModelSelected" />
+      <RightColumn  @model-generated="handleModelGenerated"/>
     </el-container>
   </el-container>
 </template>
