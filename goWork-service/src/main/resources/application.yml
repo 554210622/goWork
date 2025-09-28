@@ -1,7 +1,7 @@
 spring:
   profiles:
     active: dev
-  
+
   application:
     name: gowork-service
 
@@ -32,7 +32,8 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/model3d?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: 123456
+#    password: 123456
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 10
@@ -66,7 +67,7 @@ mybatis-plus:
 
 tripo:
   api:
-    key: ${TRIPO_API_KEY:tsk_L6eSOafnipu5f3BRlK2oMsiwOCrCslWVocEU_AJ1-T8}
+    key: ${TRIPO_API_KEY:tsk_hUVID9pynsnF_N94C1Vxv4Hiqsd73cDrj5N8N5kz3NX}
     base-url: https://api.tripo3d.ai/v2/openapi
     timeout: 60000
 
